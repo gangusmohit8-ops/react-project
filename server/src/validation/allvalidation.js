@@ -11,3 +11,7 @@ export const validateName = (name) => {
     const nameRegex = /^[A-Za-z\s]+$/;
     return nameRegex.test(name);
 }
+export const validateGender = (gender) => {
+    const validGenders = ['male', 'female', 'other'];
+    return validGenders.includes(gender.toLowerCase());
+}

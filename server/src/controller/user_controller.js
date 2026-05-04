@@ -1,45 +1,46 @@
 import user_model from '../model/user_model.js'
-import { validateEmail, validateName, validatePassword } from '../validation/allvalidation.js'
 import { sendOtpEmail } from '../mail/userOtp.js'
+import { error } from '../error/error.js'
+import crypto from 'crypto'
 
 export const register = async (req, res) => {
     try {
         const data = req.body
 
         const { name, email, password, gender } = data
-        if (!email) return res.status(400).send({ status: false, sucess: false, message: "Email is Required" })
-        if (!validateEmail(email)) return res.status(400).send({ status: false, sucess: false, message: "Invalid Email Format" })
-
-        const checkUser = await user_model.findOne({ email: email })
-        
-        if (checkUser) return res.status(400).send({ status: false, sucess: false, message: "User Already Present" })
+        const randomOtp = crypto.randomInt(1000, 9999)
+        const expirtTime = new Date.now() + 1000 * 60 * 5
 
 
-        if (!name) return res.status(400).send({ status: false, sucess: false, message: "Name is Required" })
-        if (!validateName(name)) return res.status(400).send({ status: false, sucess: false, message: "Name should only contain letters and spaces" })
+        const checkUser = await user_model.findOneAndUpdate(
+            { email: email },
+            { $set: { "verification.user.otp": randomOtp, "verification.user.otpExpireTime": expirtTime } },
+            // { new: true }
+        );
 
+        if (checkUser) return res.status(200).send({ status: true, msg: "resent Otp Send" })
 
-        if (!password) return res.status(400).send({ status: false, sucess: false, message: "Password is Required" })
-        if (!validatePassword(password)) return res.status(400).send({ status: false, sucess: false, message: "Password should contain at least 8 characters, including one letter and one number" })
-
-        sendOtpEmail(email, name, 5678)
+        const DBData = {
+            name, email, password, gender, verification: { user: { otp: randomOtp, otpExpireTime: expirtTime } }
+        }
 
         const DB = await user_model.create(data)
+        sendOtpEmail(email, name, randomOtp)
         res.status(200).send({ status: true, sucess: true, message: "User Created Successfully", data: DB })
     }
-    catch (err) { res.status(500).send({ status: false, msg: err.message }); }
+    catch (err) { error(err.message) }
 }
 
 export const verify_otp = async (req, res) => {
     try {
 
     }
-    catch (err) { console.log(err.message); }
+    catch (err) { error(err.message) }
 }
 
 export const loh_in = async (req, res) => {
     try {
 
     }
-    catch (err) { console.log(err.message); }
+    catch (err) { error(err.message) }
 }
