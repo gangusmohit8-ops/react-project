@@ -60,7 +60,7 @@ export const log_in = async (req, res) => {
             if(block) return res.status(404).send({status:false, msg:'your Account is block by Admin'})
         }
         const checkPass = await bcrypt.compare(password, checkUser.password)
-        if(!checkPass)
+        if(!checkPass) return 
     }
     catch (err) { error(err.message) }
 }
