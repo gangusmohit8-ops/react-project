@@ -2,6 +2,7 @@ import user_model from '../model/user_model.js'
 import { sendOtpEmail } from '../mail/userOtp.js'
 import { error } from '../error/error.js'
 import crypto from 'crypto'
+import bcrypt from 'bcrypt'
 
 export const register = async (req, res) => {
     try {
@@ -38,9 +39,28 @@ export const verify_otp = async (req, res) => {
     catch (err) { error(err.message) }
 }
 
-export const loh_in = async (req, res) => {
+export const resend_otp = async (req, res) => {
     try {
 
+    }
+    catch (err) { error(err.message) }
+}
+
+export const log_in = async (req, res) => {
+    try {
+        const {email, password}=req.body
+
+        const checkUser= await user_model.findOne({email:email})
+        if(!checkUser) return res.status(404).send({status:false, msg:'user not found'})
+        
+        if (checkUser){
+            const {isVerify, isDelete, block}=checkUser.verification.user
+            if(!isVerify) return res.status(404).send({status:false, msg:'pls verify otp'})
+            if(isDelete) return res.status(404).send({status:false, msg:'Account is Delete'})
+            if(block) return res.status(404).send({status:false, msg:'your Account is block by Admin'})
+        }
+        const checkPass = await bcrypt.compare(password, checkUser.password)
+        if(!checkPass)
     }
     catch (err) { error(err.message) }
 }
